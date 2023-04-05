@@ -469,6 +469,7 @@ GraphType BuildRoadMap(
         edge_validity_check_fn,
     const int64_t K,
     const int32_t max_valid_sample_tries,
+    const std::vector<T>& initial_states,
     const parallelism::DegreeOfParallelism& parallelism,
     const bool use_parallel_sampling = true,
     const bool connection_is_symmetric = true,
@@ -488,7 +489,7 @@ GraphType BuildRoadMap(
   }
 
   std::vector<OwningMaybe<T>, OwningMaybeAllocator<T>> roadmap_states(
-      static_cast<size_t>(roadmap_size));
+      static_cast<size_t>(roadmap_size - initial_states.size()));
 
   const std::function<double(const OwningMaybe<T>&, const T&)>
       roadmap_states_distance_fn = [&](
@@ -555,6 +556,10 @@ GraphType BuildRoadMap(
 
   // Populate the roadmap from the sampled valid configurations.
   GraphType roadmap(roadmap_size);
+  for (const T& initial_state : initial_states)
+  {
+    roadmap.AddNode(initial_state);
+  }
   for (const OwningMaybe<T>& maybe_state : roadmap_states)
   {
     if (maybe_state.HasValue())
